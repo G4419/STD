@@ -75,8 +75,23 @@ target_link_libraries(place_recognition_livox
         ${OpenCV_LIBS} 
         ${CERES_LIBRARIES})
 
+add_executable(place_recognition_pcd demo/place_recognition_pcd.cpp src/STDesc.cpp )
+target_link_libraries(place_recognition_pcd
+        ${catkin_LIBRARIES} 
+        ${PCL_LIBRARIES} 
+        ${OpenCV_LIBS} 
+        ${CERES_LIBRARIES})
+
 add_executable(pgo_demo demo/pgo_demo.cpp src/STDesc.cpp )
 target_link_libraries(pgo_demo 
+        ${catkin_LIBRARIES} 
+        ${PCL_LIBRARIES} 
+        ${OpenCV_LIBS} 
+        ${CERES_LIBRARIES}
+        gtsam)
+
+add_executable(pgo_demo_pcd demo/pgo_demo_pcd.cpp src/STDesc.cpp )
+target_link_libraries(pgo_demo_pcd
         ${catkin_LIBRARIES} 
         ${PCL_LIBRARIES} 
         ${OpenCV_LIBS} 
