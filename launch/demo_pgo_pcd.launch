@@ -1,7 +1,7 @@
 <launch>
 <!-- Launch file for Livox AVIA LiDAR -->
 
-  <arg name="rviz" default="false" />
+  <arg name="rviz" default="true" />
   <rosparam command="load" file="$(find std_detector)/config/config_pgo.yaml" />
   <group if="$(arg rviz)">
     <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find std_detector)/rviz_cfg/pgo.rviz" />
@@ -13,8 +13,8 @@
 		name="pgo_demo_pcd" 
 		output="screen" 
 	/>
-  <param name="lidar_path" type="string" value = "/media/ryan/313C-8549/STD_test/pcd/"/>
-  <param name="pose_path" type="string" value = "/media/ryan/313C-8549/STD_test/pose_with_time.json"/>
+  <param name="lidar_path" type="string" value = "/media/ryan/o.O/d1/pcd/"/>
+  <param name="pose_path" type="string" value = "/media/ryan/o.O/d1/pose_with_time.json"/>
   <param name="pcd_name_fill_num" type="int" value = "0"/>
 
 </launch>

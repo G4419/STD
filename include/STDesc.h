@@ -55,6 +55,7 @@ typedef struct ConfigSetting {
   double icp_threshold_ = 0.5;
   double normal_threshold_ = 0.1;
   double dis_threshold_ = 0.3;
+  double std_dis_threshold_ = 3.0;
 
 } ConfigSetting;
 
@@ -300,6 +301,8 @@ public:
                   std::pair<int, double> &loop_result,
                   std::pair<Eigen::Vector3d, Eigen::Matrix3d> &loop_transform,
                   std::vector<std::pair<STDesc, STDesc>> &loop_std_pair);
+
+  double CalculateSTDDistance(std::vector<std::pair<STDesc, STDesc>> &loop_std_pair); 
 
   // add descriptors to database
   void AddSTDescs(const std::vector<STDesc> &stds_vec);

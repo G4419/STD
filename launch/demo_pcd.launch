@@ -9,8 +9,8 @@
 		name="place_recognition_pcd" 
 		output="screen" 
 	/>
-  <param name="lidar_path" type="string" value = "/media/ryan/313C-8549/STD_test/pcd/"/>
-  <param name="pose_path" type="string" value = "/media/ryan/313C-8549/STD_test/pose_with_time.json"/>
+  <param name="lidar_path" type="string" value = "/media/ryan/新加卷/STD_test/pcd/"/>
+  <param name="pose_path" type="string" value = "/media/ryan/新加卷/STD_test/pose_with_time.json"/>
   <param name="pcd_name_fill_num" type="int" value = "0"/>
 
   <group if="$(arg rviz)">

@@ -22,7 +22,7 @@ non_max_suppression_radius: 3
 std_side_resolution: 0.2
 
 # candidate search
-skip_near_num: 75
+skip_near_num: 50
 candidate_num: 50
 sub_frame_num: 10
 vertex_diff_threshold: 0.5
@@ -30,4 +30,5 @@ rough_dis_threshold: 0.01
 normal_threshold: 0.2
 dis_threshold: 0.5
 icp_threshold: 0.4
+std_dis_threshold: 3.0
 

@@ -206,6 +206,11 @@ int main(int argc, char **argv)
 
       if (search_result.first > 0)
       {
+        ROS_INFO("std match center x %f, %f", loop_std_pair[0].first.center_.x(), loop_std_pair[0].second.center_.x());
+        ROS_INFO("std match center y %f, %f", loop_std_pair[0].first.center_.y(), loop_std_pair[0].second.center_.y());
+        ROS_INFO("std match center z %f, %f", loop_std_pair[0].first.center_.z(), loop_std_pair[0].second.center_.z());
+        // ROS_INFO("transform: %f, %f, %f", loop_transform.first.x(),
+        //          loop_transform.first.y(), loop_transform.first.z());
         triggle_loop_num++;
         // add connection between near frame
         initial.insert(cloudInd,
@@ -229,7 +234,7 @@ int main(int argc, char **argv)
         graph.push_back(near_factor);
 
         int match_frame = search_result.first;
-        if ((poses_vec[match_frame].first - translation).norm() < 10.0)
+        // if ((poses_vec[match_frame].first - translation).norm() < 30.0)
         {
           // obtain optimal transform
           std_manager->PlaneGeomrtricIcp(
@@ -454,6 +459,7 @@ int main(int argc, char **argv)
              << opt_q.y() << " " << opt_q.z() << std::endl;
   }
   opt_pose.close();
+  ROS_INFO("write pose done.");
 
   return 0;
 }

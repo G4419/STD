@@ -91,6 +91,7 @@ void read_parameters(ros::NodeHandle &nh, ConfigSetting &config_setting) {
   nh.param<double>("icp_threshold", config_setting.icp_threshold_, 0.5);
   nh.param<double>("normal_threshold", config_setting.normal_threshold_, 0.2);
   nh.param<double>("dis_threshold", config_setting.dis_threshold_, 0.5);
+  nh.param<double>("std_dis_threshold", config_setting.std_dis_threshold_, 3.0);
 
   std::cout << "Sucessfully load parameters:" << std::endl;
   std::cout << "----------------Main Parameters-------------------"
@@ -103,6 +104,8 @@ void read_parameters(ros::NodeHandle &nh, ConfigSetting &config_setting) {
   std::cout << "candidate number: " << config_setting.candidate_num_
             << std::endl;
   std::cout << "maximum corners size: " << config_setting.maximum_corner_num_
+            << std::endl;
+  std::cout << "matched mean std threshold: "<< config_setting.std_dis_threshold_ 
             << std::endl;
 }
 
@@ -342,6 +345,15 @@ void STDescManager::GenerateSTDescs(
   return;
 }
 
+double STDescManager::CalculateSTDDistance(
+    std::vector<std::pair<STDesc, STDesc>> &loop_std_pair) {
+  double distance = 0;
+  for (auto var : loop_std_pair) {
+    distance += (var.first.center_ - var.second.center_).norm();
+  }
+  return distance / loop_std_pair.size();
+}
+
 void STDescManager::SearchLoop(
     const std::vector<STDesc> &stds_vec, std::pair<int, double> &loop_result,
     std::pair<Eigen::Vector3d, Eigen::Matrix3d> &loop_transform,
@@ -370,7 +382,9 @@ void STDescManager::SearchLoop(
     std::vector<std::pair<STDesc, STDesc>> sucess_match_vec;
     candidate_verify(candidate_matcher_vec[i], verify_score, relative_pose,
                      sucess_match_vec);
-    if (verify_score > best_score) {
+    // if (verify_score > best_score) {
+    if (verify_score > best_score && CalculateSTDDistance(sucess_match_vec) <
+                                       config_setting_.std_dis_threshold_) {
       best_score = verify_score;
       best_candidate_id = candidate_matcher_vec[i].match_id_.second;
       best_transform = relative_pose;
@@ -1463,7 +1477,10 @@ void STDescManager::PlaneGeomrtricIcp(
   ceres::Solve(options, &problem, &summary);
   Eigen::Quaterniond q_opt(para_q[3], para_q[0], para_q[1], para_q[2]);
   rot = q_opt.toRotationMatrix();
-  t << t_last_curr(0), t_last_curr(1), t_last_curr(2);
+  //may be a bug
+  // t << t_last_curr(0), t_last_curr(1), t_last_curr(2);
+  t << para_t[0], para_t[1], para_t[2];
+  
   transform.first = t;
   transform.second = rot;
   // std::cout << "useful match for icp:" << useful_match << std::endl;
