@@ -13,7 +13,7 @@
 		name="pgo_demo_pcd" 
 		output="screen" 
 	/>
-  <param name="lidar_path" type="string" value = "/media/ryan/o.O/d1/pcd/"/>
+  <param name="lidar_path" type="string" value = "/media/ryan/新加卷/dataset/company/outdoor/20230223带控制点[单回环]/Mapping data/20230223带控制点/savefile/PCDs/"/>
   <param name="pose_path" type="string" value = "/media/ryan/o.O/d1/pose_with_time.json"/>
   <param name="pcd_name_fill_num" type="int" value = "0"/>
 

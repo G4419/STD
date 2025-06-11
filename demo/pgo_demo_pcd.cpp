@@ -24,6 +24,39 @@ void loadPCD(std::string filePath, int pcd_fill_num, pcl::PointCloud<PointType>:
   pcl::io::loadPCDFile(filePath + prefix + ss.str() + ".pcd", *pc);
 }
 
+void loadPCD(std::string filePath, int pcd_fill_num, pcl::PointCloud<PointType>::Ptr &pc, std::vector<std::pair<Eigen::Vector3d, Eigen::Matrix3d>>& poses_vec,
+   int num, std::string prefix = "")
+{
+std::stringstream ss;
+if (pcd_fill_num > 0)
+ss << std::setw(pcd_fill_num) << std::setfill('0') << num;
+else
+ss << num;
+pcl::io::loadPCDFile(filePath + prefix + ss.str() + ".pcd", *pc);
+Eigen::Vector3d translation = pc->sensor_origin_.block<3, 1>(0, 0).cast<double>();
+Eigen::Matrix3d rotation = pc->sensor_orientation_.toRotationMatrix().cast<double>();
+poses_vec.push_back({translation, rotation});
+}
+
+void writePCD(std::string filePath, int pcd_fill_num,  gtsam::Values& results,
+  int num, std::string prefix = "")
+{
+  pcl::PointCloud<PointType>::Ptr pc(new pcl::PointCloud<PointType>);
+  std::stringstream ss;
+  if (pcd_fill_num > 0)
+    ss << std::setw(pcd_fill_num) << std::setfill('0') << num;
+  else
+    ss << num;
+    std::string fullName = filePath + prefix + ss.str() + ".pcd";
+  pcl::io::loadPCDFile(fullName, *pc);
+  gtsam::Pose3 pose = results.at<gtsam::Pose3>(num);
+  pc->sensor_origin_.block<3, 1>(0, 0) = pose.translation().cast<float>();
+  pc->sensor_orientation_ = pose.rotation().toQuaternion().cast<float>();
+
+    // 6. 保存修改后的 PCD
+    pcl::io::savePCDFileBinary(fullName, *pc);
+}
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "pgo_demo");
@@ -61,10 +94,10 @@ int main(int argc, char **argv)
   std::vector<std::pair<Eigen::Vector3d, Eigen::Matrix3d>> poses_vec;
   std::vector<std::pair<Eigen::Vector3d, Eigen::Matrix3d>> key_poses_vec;
 
-  std::vector<double> times_vec;
-  load_pose_with_time(pose_path, poses_vec, times_vec);
-  std::cout << "Sucessfully load pose with number: " << poses_vec.size()
-            << std::endl;
+  // std::vector<double> times_vec;
+  // load_pose_with_time(pose_path, poses_vec, times_vec);
+  // std::cout << "Sucessfully load pose with number: " << poses_vec.size()
+  //           << std::endl;
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_vec;
 
   STDescManager *std_manager = new STDescManager(config_setting);
@@ -96,10 +129,10 @@ int main(int argc, char **argv)
   {
 
     pcl::PointCloud<pcl::PointXYZI>::Ptr current_cloud(new pcl::PointCloud<pcl::PointXYZI>());
-    loadPCD(lidar_path, pcd_name_fill_num, current_cloud, cloudInd);
+    loadPCD(lidar_path, pcd_name_fill_num, current_cloud, poses_vec, cloudInd);
     if (current_cloud->empty())
       break;
-
+    
     Eigen::Vector3d translation = poses_vec[cloudInd].first;
     Eigen::Matrix3d rotation = poses_vec[cloudInd].second;
     Eigen::Matrix4d transform(Eigen::Matrix4d::Identity());
@@ -113,41 +146,12 @@ int main(int argc, char **argv)
       temp_cloud->points.push_back(pv);
     }
 
-    // std::stringstream lidar_data_path;
-    // lidar_data_path << lidar_path << std::setfill('0') << std::setw(6)
-    //                 << cloudInd << ".bin";
-    // std::vector<float> lidar_data = read_lidar_data(lidar_data_path.str());
-    // if (lidar_data.size() == 0) {
-    //   break;
-    // }
-    // pcl::PointCloud<pcl::PointXYZI>::Ptr current_cloud(
-    //     new pcl::PointCloud<pcl::PointXYZI>());
-    // Eigen::Vector3d translation = poses_vec[cloudInd].first;
-    // Eigen::Matrix3d rotation = poses_vec[cloudInd].second;
-    // for (std::size_t i = 0; i < lidar_data.size(); i += 4) {
-    //   pcl::PointXYZI point;
-    //   point.x = lidar_data[i];
-    //   point.y = lidar_data[i + 1];
-    //   point.z = lidar_data[i + 2];
-    //   point.intensity = lidar_data[i + 3];
-    //   Eigen::Vector3d pv = point2vec(point);
-    //   pv = rotation * pv + translation;
-    //   point = vec2point(pv);
-    //   point.intensity = lidar_data[i + 3];
-    //   current_cloud->push_back(point);
-    // }
-    // down_sampling_voxel(*current_cloud, config_setting.ds_size_);
-    // cloud_vec.push_back(current_cloud);
-    // for (auto pv : current_cloud->points) {
-    //   temp_cloud->points.push_back(pv);
-    // }
-
     // check if keyframe
     if (cloudInd % config_setting.sub_frame_num_ == 0 && cloudInd != 0)
     {
       // use first frame's pose as key pose
-      key_poses_vec.push_back(
-          poses_vec[cloudInd - config_setting.sub_frame_num_]);
+      // key_poses_vec.push_back(
+      //     poses_vec[cloudInd - config_setting.sub_frame_num_]);
       std::cout << "Key Frame id:" << keyCloudInd
                 << ", cloud size: " << temp_cloud->size() << std::endl;
       // step1. Descriptor Extraction
@@ -447,18 +451,19 @@ int main(int argc, char **argv)
     }
   }
 
-  std::ofstream opt_pose;
-  opt_pose.open("opt_pose.json");
+
+
+
   for (size_t i = 0; i < results.size(); i++)
   {
-    gtsam::Pose3 pose = results.at(i).cast<gtsam::Pose3>();
-    Eigen::Vector3d opt_translation = pose.translation();
-    Eigen::Quaterniond opt_q(pose.rotation().matrix());
-    opt_pose << opt_translation[0] << " " << opt_translation[1] << " "
-             << opt_translation[2] << " " << opt_q.w() << " " << opt_q.x() << " "
-             << opt_q.y() << " " << opt_q.z() << std::endl;
+    writePCD(lidar_path, pcd_name_fill_num, results, i);
+    // gtsam::Pose3 pose = results.at(i).cast<gtsam::Pose3>();
+    // Eigen::Vector3d opt_translation = pose.translation();
+    // Eigen::Quaterniond opt_q(pose.rotation().matrix());
+    // opt_pose << opt_translation[0] << " " << opt_translation[1] << " "
+    //          << opt_translation[2] << " " << opt_q.w() << " " << opt_q.x() << " "
+    //          << opt_q.y() << " " << opt_q.z() << std::endl;
   }
-  opt_pose.close();
   ROS_INFO("write pose done.");
 
   return 0;
